@@ -166,7 +166,7 @@ def get_idiomas():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT idioma, nombre FROM idiomas WHERE activo = true")
+        cursor.execute("SELECT codigo, nombre FROM idiomas WHERE activo = true")
         idiomas = cursor.fetchall()
         return jsonify(idiomas)
     except Exception as e:
