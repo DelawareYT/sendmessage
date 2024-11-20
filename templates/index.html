@@ -36,11 +36,11 @@
                     </select>
                 </div>
 
+                <div id="fieldsContainer" style="display: none;"></div>
+
                 <div class="form-group">
                     <label for="phoneNumber">Número de destino:</label>
-                    <input type="tel" id="phoneNumber" required 
-                           pattern="[0-9]{10}" 
-                           placeholder="Ingrese número (10 dígitos)">
+                    <input type="tel" id="phoneNumber" required pattern="[0-9]{10}" placeholder="Ingrese número (10 dígitos)">
                 </div>
 
                 <button type="submit">Enviar Mensaje</button>
@@ -53,130 +53,6 @@
         </div>
     </div>
 
-    <script>
-    $(document).ready(function() {
-        let templatesData = {};
-
-        // Cargar idiomas al iniciar
-        fetch('/api/idiomas')
-            .then(response => response.json())
-            .then(data => {
-                const select = $('#language');
-                data.forEach(idioma => {
-                    select.append(`<option value="${idioma.codigo}">${idioma.nombre}</option>`);
-                });
-            });
-
-        // Activar el selector de departamentos cuando se seleccione un idioma
-        $('#language').change(function() {
-            const idiomaCodigo = $(this).val();
-            const departamentoSelect = $('#departamento');
-
-            departamentoSelect.prop('disabled', true);
-            departamentoSelect.html('<option value="">Seleccionar departamento...</option>');
-
-            if (idiomaCodigo) {
-                fetch(`/api/departamentos?idioma=${idiomaCodigo}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        data.forEach(dept => {
-                            departamentoSelect.append(`<option value="${dept.id}">${dept.nombre}</option>`);
-                        });
-
-                        departamentoSelect.prop('disabled', false);
-                    });
-            }
-        });
-
-        // Activar y cargar templates al seleccionar un departamento
-        $('#departamento').change(function () {
-            const departamentoId = $(this).val();
-            const idioma = $('#language').val(); // Obtener el idioma seleccionado
-            const templateSelect = $('#template');
-
-            // Resetear el campo de templates y la vista previa
-            templateSelect.prop('disabled', true);
-            templateSelect.html('<option value="">Seleccionar template...</option>');
-            $('#messagePreview').text('');
-
-            if (departamentoId && idioma) {
-                // Llamar al endpoint con los parámetros correspondientes
-                fetch(`/api/templates?idioma=${idioma}&departamento_id=${departamentoId}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Error al obtener los templates');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.length === 0) {
-                            alert('No se encontraron templates para este departamento e idioma');
-                            return;
-                        }
-
-                        // Mapear los templates al selector
-                        templatesData = data.reduce((acc, template) => {
-                            acc[template.template_id] = template;
-                            return acc;
-                        }, {});
-
-                        data.forEach(template => {
-                            templateSelect.append(
-                                `<option value="${template.template_id}">${template.template_nombre}</option>`
-                            );
-                        });
-
-                        // Habilitar el selector de templates
-                        templateSelect.prop('disabled', false);
-                    })
-                    .catch(error => {
-                        console.error('Error al cargar templates:', error);
-                    });
-            } else {
-                alert('Debe seleccionar un idioma y un departamento antes de cargar templates.');
-            }
-        });
-
-        // Actualizar el preview del mensaje
-        function updatePreview() {
-            const templateId = $('#template').val();
-            if (templateId && templatesData[templateId]) {
-                const template = templatesData[templateId];
-                $('#messagePreview').text(template.mensaje);
-            }
-        }
-
-        $('#template').change(updatePreview);
-
-        // Enviar mensaje
-        $('#messageForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = {
-                idioma: $('#language').val(),
-                departamento_id: $('#departamento').val(),
-                template_id: $('#template').val(),
-                phoneNumber: $('#phoneNumber').val(),
-                message: $('#messagePreview').text()
-            };
-
-            fetch('/api/send-message', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert('Mensaje enviado exitosamente');
-            })
-            .catch(error => {
-                alert('Error al enviar el mensaje');
-                console.error('Error:', error);
-            });
-        });
-    });
-    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

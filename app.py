@@ -63,11 +63,12 @@ def get_templates_by_idioma_departamento():
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
             SELECT 
-                tm.template_id AS template_id,
-                tm.mensaje AS mensaje,
+                tm.template_id, 
+                tm.nombre AS template_nombre, 
+                tm.mensaje,
                 d.nombre AS departamento,
-                tm.activo AS activo,
-                tm.campos_variables AS campos_variables
+                tm.activo,
+                tm.campos_variables  -- Aquí obtenemos los campos variables
             FROM 
                 template_mensajes tm
             JOIN 
@@ -88,55 +89,70 @@ def get_templates_by_idioma_departamento():
             cursor.close()
         if conn:
             conn.close()
+            
 @app.route('/api/send-message', methods=['POST'])
 def send_message():
     conn = None
     cursor = None
     try:
         data = request.json
+        print("Datos recibidos:", data)  # Imprime los datos recibidos
+
+        # Validar que todos los campos necesarios estén presentes
+        required_fields = ['idioma', 'departamento_id', 'template_id', 'phoneNumber', 'message']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Campo faltante: {field}'
+                }), 400
+
         ip_address = request.remote_addr
-        
+
         message_data = {
-            'language': data['language'],
-            'departamento_id': data['departamento_id'],  # Agregar departamento_id
+            'language': data['idioma'],
+            'departamento_id': data['departamento_id'],
             'template_id': data['template_id'],
             'phoneNumber': data['phoneNumber'],
             'message': data['message'],
             'ip': ip_address,
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            'campos': data.get('campos', {})
         }
-        
+
+        print("Datos a guardar en la base de datos:", message_data)
+
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         query = '''
             INSERT INTO mensajes 
             (idioma, departamento_id, template_id, numero_destino, mensaje, ip_origen, fecha_envio, json_data)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         '''
-        
+
         values = (
-            data['language'],
-            data['departamento_id'],  # Usar data['departamento_id']
-            data['template_id'],
-            data['phoneNumber'],
-            data['message'],
+            message_data['language'],
+            message_data['departamento_id'],
+            message_data['template_id'],
+            message_data['phoneNumber'],
+            message_data['message'],
             ip_address,
             datetime.now(),
             json.dumps(message_data)
         )
-        
+
         cursor.execute(query, values)
         conn.commit()
-        
+
         return jsonify({
             'status': 'success',
             'message': 'Mensaje guardado exitosamente',
             'data': message_data
         }), 200
-        
+
     except Exception as e:
-        print(f"Error en send_message: {str(e)}")
+        print(f"Error en send_message: {str(e)}")  # Imprimir el error para depuración
         return jsonify({
             'status': 'error',
             'message': str(e)
