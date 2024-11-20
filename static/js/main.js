@@ -1,5 +1,65 @@
 $(document).ready(function() {
     let templatesData = {};
+    let departamentosMap = {}; // Mapa para departamentos
+    let idiomasMap = {}; // Mapa para idiomas
+
+    // Cargar los departamentos en el mapa
+    fetch('/api/departamentos')
+        .then(response => response.json())
+        .then(data => {
+            // Verificar si se cargaron los departamentos correctamente
+            console.log('Departamentos cargados:', data);
+
+            data.forEach(depto => {
+                departamentosMap[depto.id] = depto.nombre;
+            });
+
+            // Cargar el historial después de tener los nombres de departamentos
+            loadMessageHistory();
+        })
+        .catch(error => {
+            console.error('Error al cargar departamentos:', error);
+        });
+
+    // Función para cargar el historial de mensajes
+    function loadMessageHistory() {
+        fetch('/api/historial-mensajes')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Historial de mensajes cargado:', data); // Depuración
+
+                if (data.length === 0) {
+                    console.log('No hay mensajes en el historial');
+                }
+
+                const tableBody = $('#historyTableBody');
+                tableBody.html(''); // Limpia la tabla antes de cargar los datos
+
+                data.forEach(message => {
+                    const departamentoNombre = departamentosMap[message.departamento_id] || 'Sin departamento';
+                    const idiomaNombre = idiomasMap[message.idioma] || 'Sin idioma';
+                    const template = templatesData[message.template_id] ? templatesData[message.template_id].template_nombre : 'Sin template';
+                    const numero = message.numero_destino || 'No disponible';
+                    const mensaje = message.mensaje || 'Mensaje no disponible';
+                    const fecha = new Date(message.fecha_envio).toLocaleString() || 'Fecha no disponible';
+
+                    // Agregar una fila en la tabla
+                    tableBody.append(`
+                        <tr>
+                            <td>${idiomaNombre}</td>
+                            <td>${departamentoNombre}</td>
+                            <td>${template}</td>
+                            <td>${numero}</td>
+                            <td>${mensaje}</td>
+                            <td>${fecha}</td>
+                        </tr>
+                    `);
+                });
+            })
+            .catch(error => {
+                console.error('Error al cargar el historial de mensajes:', error);
+            });
+    }
 
     // Cargar idiomas al iniciar
     fetch('/api/idiomas')
@@ -7,8 +67,12 @@ $(document).ready(function() {
         .then(data => {
             const select = $('#language');
             data.forEach(idioma => {
+                idiomasMap[idioma.codigo] = idioma.nombre; // Guardar los idiomas en el mapa
                 select.append(`<option value="${idioma.codigo}">${idioma.nombre}</option>`);
             });
+        })
+        .catch(error => {
+            console.error('Error al cargar idiomas:', error);
         });
 
     // Activar el selector de departamentos cuando se seleccione un idioma
@@ -46,7 +110,9 @@ $(document).ready(function() {
         fieldsContainer.html(''); // Limpiar campos adicionales
 
         if (departamentoId && idioma) {
-            fetch(`/api/templates?idioma=${idioma}&departamento_id=${departamentoId}`)
+            const url = `/api/templates?idioma=${idioma}&departamento_id=${departamentoId}`;
+
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     if (data.length === 0) {
@@ -56,9 +122,12 @@ $(document).ready(function() {
 
                     // Mapear los templates al selector
                     templatesData = data.reduce((acc, template) => {
-                        acc[template.template_id] = template;
+                        acc[template.template_id] = template; // Almacena el template completo
                         return acc;
                     }, {});
+
+                    // Limpiar el select antes de agregar los nuevos templates
+                    templateSelect.html('<option value="">Seleccionar template...</option>');
 
                     data.forEach(template => {
                         templateSelect.append(
@@ -105,6 +174,9 @@ $(document).ready(function() {
                 fieldsContainer.children().each(function() {
                     $(this).fadeIn();
                 });
+            } else {
+                // Si no tiene campos variables, no mostrar nada
+                fieldsContainer.hide();
             }
 
             // Mostrar el mensaje en vista previa
@@ -123,8 +195,10 @@ $(document).ready(function() {
                 const inputId = $(this).attr('id');
                 const inputValue = $(this).val();
                 
-                // Reemplazar el placeholder en el mensaje por el valor del input
-                mensajePreview = mensajePreview.replace(`{${inputId}}`, inputValue);
+                // Reemplazar el placeholder en el mensaje por el valor del input solo si el valor existe
+                if (inputValue) {
+                    mensajePreview = mensajePreview.replace(`{${inputId}}`, inputValue);
+                }
             });
             
             // Actualizar la vista previa
@@ -147,9 +221,26 @@ $(document).ready(function() {
         };
 
         // Obtener los valores de los campos adicionales
+        let valid = true; // Flag de validación
         $('#fieldsContainer input').each(function() {
-            formData.campos[$(this).attr('id')] = $(this).val();
+            const inputId = $(this).attr('id');
+            const inputValue = $(this).val();
+
+            // Verificar si el campo es obligatorio y no está vacío
+            if (inputValue === '') {
+                valid = false; // Marcar como no válido
+                alert(`El campo ${inputId} es obligatorio.`);
+                return false; // Detener la iteración
+            }
+
+            formData.campos[inputId] = inputValue;
         });
+
+        if (!valid) {
+            return; // Si no es válido, no enviar el formulario
+        }
+
+        // Si todo es válido, enviar el formulario
         console.log('JSON a enviar:', formData);
         fetch('/api/send-message', {
             method: 'POST',
@@ -161,6 +252,7 @@ $(document).ready(function() {
         .then(response => response.json())
         .then(data => {
             alert('Mensaje enviado exitosamente');
+            loadMessageHistory(); // Recargar el historial después de enviar el mensaje
         })
         .catch(error => {
             alert('Error al enviar el mensaje');
