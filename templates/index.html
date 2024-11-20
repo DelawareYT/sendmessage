@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mensaje Builder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="input-section">
+            <div class="logo-container">
+                <img src="/static/imagenes/delancer.png" alt="Delancer Logo" class="logo">
+              </div>
+            <h2>Enviar mensaje a cliente</h2>
+            <form id="messageForm">
+                <div class="form-group">
+                    <label for="language">Idioma:</label>
+                    <select id="language" required>
+                        <option value="es">Español</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="departamento">Departamento:</label>
+                    <select id="departamento" required>
+                        <option value="">Seleccionar departamento...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="template">Template:</label>
+                    <select id="template" required disabled>
+                        <option value="">Seleccionar template...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="phoneNumber">Número de destino:</label>
+                    <input type="tel" id="phoneNumber" required 
+                           pattern="[0-9]{10}" 
+                           placeholder="Ingrese número (10 dígitos)">
+                </div>
+
+                <button type="submit">Enviar Mensaje</button>
+            </form>
+        </div>
+
+        <div class="preview-section">
+            <h2>Preview del Mensaje</h2>
+            <div id="messagePreview"></div>
+        </div>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+        let templatesData = {};
+
+        // Cargar departamentos al iniciar
+        fetch('/api/departamentos')
+            .then(response => response.json())
+            .then(data => {
+                const select = $('#departamento');
+                data.forEach(dept => {
+                    select.append(`<option value="${dept.id}">${dept.nombre}</option>`);
+                });
+            });
+
+        // Cuando se selecciona un departamento
+        $('#departamento').change(function() {
+            const departamentoId = $(this).val();
+            const templateSelect = $('#template');
+            
+            templateSelect.prop('disabled', true);
+            templateSelect.html('<option value="">Seleccionar template...</option>');
+
+            if (departamentoId) {
+                fetch(`/api/templates/${departamentoId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        templatesData = data.reduce((acc, template) => {
+                            acc[template.id] = template;
+                            return acc;
+                        }, {});
+
+                        data.forEach(template => {
+                            templateSelect.append(`<option value="${template.id}">${template.nombre}</option>`);
+                        });
+                        
+                        templateSelect.prop('disabled', false);
+                    });
+            }
+        });
+
+        function updatePreview() {
+            const language = $('#language').val();
+            const templateId = $('#template').val();
+            const phoneNumber = $('#phoneNumber').val();
+
+            if (templateId && templatesData[templateId]) {
+                const template = templatesData[templateId];
+                let message = language === 'es' ? template.mensaje_es : template.mensaje_en;
+                
+                if (phoneNumber) {
+                    
+                }
+                
+                $('#messagePreview').text(message);
+            }
+        }
+
+        $('#language, #template, #phoneNumber').on('change input', updatePreview);
+
+        $('#messageForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                language: $('#language').val(),
+                departamento_id: $('#departamento').val(),
+                template_id: $('#template').val(),
+                phoneNumber: $('#phoneNumber').val(),
+                message: $('#messagePreview').text()
+            };
+
+            fetch('/api/send-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Mensaje enviado exitosamente');
+            })
+            .catch(error => {
+                alert('Error al enviar el mensaje');
+                console.error('Error:', error);
+            });
+        });
+    });
+    </script>
+</body>
+</html>
