@@ -181,6 +181,31 @@ def get_idiomas():
             cursor.close()
         if conn:
             conn.close()
+
+@app.route('/api/historial-mensajes', methods=['GET'])
+def get_historial_mensajes():
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = '''
+            SELECT id, idioma, departamento_id, template_id, numero_destino, mensaje, ip_origen, fecha_envio 
+            FROM mensajes 
+            ORDER BY fecha_envio DESC
+        '''
+        cursor.execute(query)
+        mensajes = cursor.fetchall()
+        return jsonify(mensajes), 200
+    except Exception as e:
+        print(f"Error en get_historial_mensajes: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 def init_db():
     conn = None
     cursor = None
@@ -273,7 +298,7 @@ def init_db():
 if __name__ == '__main__':
     init_db()  
     app.run(debug=True, host="0.0.0.0", port=8000)
-
+    print("hola")
     
 
 
