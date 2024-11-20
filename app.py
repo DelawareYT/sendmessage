@@ -48,6 +48,35 @@ def get_departamentos():
         if conn:
             conn.close()
 
+@app.route('/api/templates', methods=['GET'])
+def get_templates_by_idioma_departamento():
+    idioma = request.args.get('idioma')
+    departamento_id = request.args.get('departamento_id')
+
+    if not idioma or not departamento_id:
+        return jsonify({'error': 'Idioma y departamento son requeridos'}), 400
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT tm.template_id AS id, tm.mensaje AS mensaje, d.nombre AS departamento
+            FROM template_mensajes tm
+            JOIN departamentos d ON tm.departamento_id = d.id
+            WHERE tm.lengua = %s AND tm.departamento_id = %s AND tm.activo = true
+        """, (idioma, departamento_id))
+        templates = cursor.fetchall()
+        return jsonify(templates)
+    except Exception as e:
+        print(f"Error en get_templates_by_idioma_departamento: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 @app.route('/api/templates/<int:departamento_id>', methods=['GET'])
 def get_templates(departamento_id):
     conn = None
@@ -124,6 +153,25 @@ def send_message():
             'status': 'error',
             'message': str(e)
         }), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+@app.route('/api/idiomas', methods=['GET'])
+def get_idiomas():
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT idioma, nombre FROM idiomas WHERE activo = true")
+        idiomas = cursor.fetchall()
+        return jsonify(idiomas)
+    except Exception as e:
+        print(f"Error en get_idiomas: {str(e)}")
+        return jsonify({'error': str(e)}), 500
     finally:
         if cursor:
             cursor.close()
