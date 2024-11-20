@@ -31,8 +31,7 @@ $(document).ready(function() {
                     select.append(`<option value="${idioma.codigo}">${idioma.nombre}</option>`);
                 });
 
-                // Ahora que los idiomas están cargados, cargar los templates y el historial
-                loadTemplates();
+                // Ahora que los idiomas están cargados, cargar el historial
                 loadMessageHistory();
             })
             .catch(error => {
@@ -40,49 +39,18 @@ $(document).ready(function() {
             });
     }
 
-    // Función para cargar los templates
-    function loadTemplates() {
-        const idiomaSeleccionado = $('#language').val(); // Idioma seleccionado en el selector
-
-        // Verificar si ya se ha seleccionado un idioma para cargar los templates
-        if (idiomaSeleccionado) {
-            fetch(`/api/templates?idioma=${idiomaSeleccionado}`)
-                .then(response => response.json())
-                .then(data => {
-                    templatesData = data.reduce((acc, template) => {
-                        acc[template.template_id] = template; // Almacena el template completo
-                        return acc;
-                    }, {});
-
-                    // Limpiar el selector de templates antes de agregar los nuevos templates
-                    const templateSelect = $('#template');
-                    templateSelect.html('<option value="">Seleccionar template...</option>');
-
-                    // Agregar templates al selector
-                    data.forEach(template => {
-                        templateSelect.append(
-                            `<option value="${template.template_id}">${template.template_nombre}</option>`
-                        );
-                    });
-
-                    // Llamar a la función que actualizará el historial de mensajes
-                    loadMessageHistory();
-                })
-                .catch(error => {
-                    console.error('Error al cargar templates:', error);
-                });
-        }
-    }
-
     // Función para cargar el historial de mensajes
     function loadMessageHistory() {
         fetch('/api/historial-mensajes')
             .then(response => response.json())
             .then(data => {
-                console.log('Historial de mensajes cargado:', data);
-                    
+                console.log('Historial de mensajes cargado:', data); // Depuración
+
+                if (data.length === 0) {
+                    console.log('No hay mensajes en el historial');
+                }
+
                 const tableBody = $('#historyTableBody');
-                
                 tableBody.html(''); // Limpiar la tabla antes de cargar los datos
 
                 data.forEach(message => {
@@ -251,22 +219,48 @@ $(document).ready(function() {
             idioma: $('#language').val(),
             departamento_id: $('#departamento').val(),
             template_id: $('#template').val(),
-            mensaje: $('#messagePreview').text(),
+            phoneNumber: $('#phoneNumber').val(),
+            message: $('#messagePreview').text(),
+            campos: {} // Aquí almacenamos los valores de los campos personalizados
         };
 
-        // Enviar los datos al servidor
-        fetch('/api/enviar-mensaje', {
+        // Obtener los valores de los campos adicionales
+        let valid = true; // Flag de validación
+        $('#fieldsContainer input').each(function() {
+            const inputId = $(this).attr('id');
+            const inputValue = $(this).val();
+
+            // Verificar si el campo es obligatorio y no está vacío
+            if (inputValue === '') {
+                valid = false; // Marcar como no válido
+                alert(`El campo ${inputId} es obligatorio.`);
+                return false; // Detener la iteración
+            }
+
+            formData.campos[inputId] = inputValue;
+        });
+
+        if (!valid) {
+            return; // Si no es válido, no enviar el formulario
+        }
+
+        // Si todo es válido, enviar el formulario
+        console.log('JSON a enviar:', formData);
+        fetch('/api/send-message', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
         })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Mensaje enviado:', data);
-                loadMessageHistory(); // Recargar el historial de mensajes después de enviar
-            })
-            .catch(error => {
-                console.error('Error al enviar el mensaje:', error);
-            });
+        .then(response => response.json())
+        .then(data => {
+            alert('Mensaje enviado exitosamente');
+            loadMessageHistory(); // Recargar el historial después de enviar el mensaje
+        })
+        .catch(error => {
+            alert('Error al enviar el mensaje');
+            console.error('Error:', error);
+        });
     });
 });
