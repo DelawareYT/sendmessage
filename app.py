@@ -189,13 +189,29 @@ def get_historial_mensajes():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
+        
+        # Consulta sin el filtro 'activo' para comprobar si los templates se están vinculando correctamente
         query = '''
-            SELECT id, idioma, departamento_id, template_id, numero_destino, mensaje, ip_origen, fecha_envio 
-            FROM mensajes 
-            ORDER BY fecha_envio DESC
+            SELECT 
+                m.id, 
+                m.idioma, 
+                m.departamento_id, 
+                m.template_id, 
+                m.numero_destino, 
+                m.mensaje, 
+                m.ip_origen, 
+                m.fecha_envio, 
+                IFNULL(tm.nombre, 'Sin Template') AS template_nombre  
+            FROM mensajes m
+            LEFT JOIN template_mensajes tm ON m.template_id = tm.template_id  
+            -- Aquí hemos eliminado el filtro 'tm.activo = 1' para depurar
+            ORDER BY m.fecha_envio DESC
+            LIMIT 20
         '''
+        
         cursor.execute(query)
         mensajes = cursor.fetchall()
+        print("Mensajes obtenidos:", mensajes)  # Agregar un print para verificar los resultados
         return jsonify(mensajes), 200
     except Exception as e:
         print(f"Error en get_historial_mensajes: {str(e)}")
@@ -205,7 +221,6 @@ def get_historial_mensajes():
             cursor.close()
         if conn:
             conn.close()
-
 def init_db():
     conn = None
     cursor = None
