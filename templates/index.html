@@ -12,7 +12,7 @@
         <div class="input-section">
             <div class="logo-container">
                 <img src="/static/imagenes/delancer.png" alt="Delancer Logo" class="logo">
-              </div>
+            </div>
             <h2>Enviar mensaje a cliente</h2>
             <form id="messageForm">
                 <div class="form-group">
@@ -50,13 +50,23 @@
 
         <div class="preview-section">
             <h2>Preview del Mensaje</h2>
-            <div id="messagePreview"></div>
+            <div id="messagePreview">Previsualización aquí...</div>
         </div>
     </div>
 
     <script>
     $(document).ready(function() {
         let templatesData = {};
+
+        // Mostrar indicador de carga
+        function showLoader(message) {
+            $('#messagePreview').text(message || "Cargando...");
+        }
+
+        // Ocultar indicador de carga
+        function hideLoader() {
+            $('#messagePreview').text('');
+        }
 
         // Cargar departamentos al iniciar
         fetch('/api/departamentos')
@@ -66,7 +76,8 @@
                 data.forEach(dept => {
                     select.append(`<option value="${dept.id}">${dept.nombre}</option>`);
                 });
-            });
+            })
+            .catch(() => alert('Error al cargar departamentos.'));
 
         // Cuando se selecciona un departamento
         $('#departamento').change(function() {
@@ -77,6 +88,7 @@
             templateSelect.html('<option value="">Seleccionar template...</option>');
 
             if (departamentoId) {
+                showLoader("Cargando templates...");
                 fetch(`/api/templates/${departamentoId}`)
                     .then(response => response.json())
                     .then(data => {
@@ -90,10 +102,16 @@
                         });
                         
                         templateSelect.prop('disabled', false);
+                        hideLoader();
+                    })
+                    .catch(() => {
+                        alert('Error al cargar templates.');
+                        hideLoader();
                     });
             }
         });
 
+        // Actualizar la previsualización
         function updatePreview() {
             const language = $('#language').val();
             const templateId = $('#template').val();
@@ -102,17 +120,24 @@
             if (templateId && templatesData[templateId]) {
                 const template = templatesData[templateId];
                 let message = language === 'es' ? template.mensaje_es : template.mensaje_en;
-                
-                if (phoneNumber) {
-                    
-                }
-                
+
+                // Reemplazar variables dinámicas con valores
+                const variables = template.variables || {};
+                Object.keys(variables).forEach(key => {
+                    const placeholder = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+                    const value = prompt(`Ingrese valor para ${key}:`, variables[key] || '');
+                    message = message.replace(placeholder, value || variables[key]);
+                });
+
                 $('#messagePreview').text(message);
+            } else {
+                $('#messagePreview').text("Seleccione un template para previsualizar el mensaje.");
             }
         }
 
         $('#language, #template, #phoneNumber').on('change input', updatePreview);
 
+        // Enviar mensaje
         $('#messageForm').on('submit', function(e) {
             e.preventDefault();
             
@@ -131,12 +156,15 @@
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => response.json())
-            .then(data => {
-                alert('Mensaje enviado exitosamente');
+            .then(response => {
+                if (response.ok) {
+                    alert('Mensaje enviado exitosamente.');
+                } else {
+                    alert('Error al enviar el mensaje.');
+                }
             })
             .catch(error => {
-                alert('Error al enviar el mensaje');
+                alert('Error al enviar el mensaje.');
                 console.error('Error:', error);
             });
         });
