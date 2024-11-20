@@ -62,37 +62,25 @@ def get_templates_by_idioma_departamento():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT tm.template_id AS id, tm.mensaje AS mensaje, d.nombre AS departamento
-            FROM template_mensajes tm
-            JOIN departamentos d ON tm.departamento_id = d.id
-            WHERE tm.lengua = %s AND tm.departamento_id = %s AND tm.activo = true
+            SELECT 
+                tm.template_id AS template_id,
+                tm.mensaje AS mensaje,
+                d.nombre AS departamento,
+                tm.activo AS activo
+            FROM 
+                template_mensajes tm
+            JOIN 
+                departamentos d ON tm.departamento_id = d.id
+            WHERE 
+                tm.lengua = %s 
+                AND tm.departamento_id = %s 
+                AND tm.activo = true
         """, (idioma, departamento_id))
+
         templates = cursor.fetchall()
         return jsonify(templates)
     except Exception as e:
         print(f"Error en get_templates_by_idioma_departamento: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-@app.route('/api/templates/<int:departamento_id>', methods=['GET'])
-def get_templates(departamento_id):
-    conn = None
-    cursor = None
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT id, nombre, codigo, mensaje_es, mensaje_en 
-            FROM templates 
-            WHERE departamento_id = %s AND activo = true
-        """, (departamento_id,))
-        templates = cursor.fetchall()
-        return jsonify(templates)
-    except Exception as e:
-        print(f"Error en get_templates: {str(e)}")
         return jsonify({'error': str(e)}), 500
     finally:
         if cursor:

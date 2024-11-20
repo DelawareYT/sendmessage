@@ -67,75 +67,93 @@
                 });
             });
 
-        // Cuando se selecciona un idioma
+        // Activar el selector de departamentos cuando se seleccione un idioma
         $('#language').change(function() {
             const idiomaCodigo = $(this).val();
             const departamentoSelect = $('#departamento');
 
-            $('#template').html('<option value="">Seleccionar template...</option>').prop('disabled', true);
-            departamentoSelect.html('<option value="">Seleccionar departamento...</option>').prop('disabled', true);
+            departamentoSelect.prop('disabled', true);
+            departamentoSelect.html('<option value="">Seleccionar departamento...</option>');
 
             if (idiomaCodigo) {
-                fetch(`/api/departamentos/${idiomaCodigo}`)
+                fetch(`/api/departamentos?idioma=${idiomaCodigo}`)
                     .then(response => response.json())
                     .then(data => {
-                        data.forEach(departamento => {
-                            departamentoSelect.append(`<option value="${departamento.id}">${departamento.nombre}</option>`);
+                        data.forEach(dept => {
+                            departamentoSelect.append(`<option value="${dept.id}">${dept.nombre}</option>`);
                         });
+
                         departamentoSelect.prop('disabled', false);
                     });
             }
         });
 
-        // Cuando se selecciona un departamento
-        $('#departamento').change(function() {
-            const idiomaCodigo = $('#language').val();
+        // Activar y cargar templates al seleccionar un departamento
+        $('#departamento').change(function () {
             const departamentoId = $(this).val();
+            const idioma = $('#language').val(); // Obtener el idioma seleccionado
             const templateSelect = $('#template');
 
-            templateSelect.html('<option value="">Seleccionar template...</option>').prop('disabled', true);
+            // Resetear el campo de templates y la vista previa
+            templateSelect.prop('disabled', true);
+            templateSelect.html('<option value="">Seleccionar template...</option>');
+            $('#messagePreview').text('');
 
-            if (departamentoId) {
-                fetch(`/api/templates/${idiomaCodigo}/${departamentoId}`)
-                    .then(response => response.json())
+            if (departamentoId && idioma) {
+                // Llamar al endpoint con los parámetros correspondientes
+                fetch(`/api/templates?idioma=${idioma}&departamento_id=${departamentoId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error al obtener los templates');
+                        }
+                        return response.json();
+                    })
                     .then(data => {
+                        if (data.length === 0) {
+                            alert('No se encontraron templates para este departamento e idioma');
+                            return;
+                        }
+
+                        // Mapear los templates al selector
                         templatesData = data.reduce((acc, template) => {
-                            acc[template.id] = template;
+                            acc[template.template_id] = template;
                             return acc;
                         }, {});
 
                         data.forEach(template => {
-                            templateSelect.append(`<option value="${template.id}">${template.nombre}</option>`);
+                            templateSelect.append(
+                                `<option value="${template.template_id}">${template.template_nombre}</option>`
+                            );
                         });
 
+                        // Habilitar el selector de templates
                         templateSelect.prop('disabled', false);
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar templates:', error);
                     });
+            } else {
+                alert('Debe seleccionar un idioma y un departamento antes de cargar templates.');
             }
         });
 
+        // Actualizar el preview del mensaje
         function updatePreview() {
             const templateId = $('#template').val();
-            const phoneNumber = $('#phoneNumber').val();
-
             if (templateId && templatesData[templateId]) {
                 const template = templatesData[templateId];
-                let message = template.mensaje;
-
-                if (phoneNumber) {
-                    message = message.replace('{numero}', phoneNumber);
-                }
-
-                $('#messagePreview').text(message);
+                $('#messagePreview').text(template.mensaje);
             }
         }
 
-        $('#language, #template, #phoneNumber').on('change input', updatePreview);
+        $('#template').change(updatePreview);
 
+        // Enviar mensaje
         $('#messageForm').on('submit', function(e) {
             e.preventDefault();
             
             const formData = {
-                idioma_codigo: $('#language').val(),
+                idioma: $('#language').val(),
                 departamento_id: $('#departamento').val(),
                 template_id: $('#template').val(),
                 phoneNumber: $('#phoneNumber').val(),
