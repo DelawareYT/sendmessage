@@ -66,7 +66,8 @@ def get_templates_by_idioma_departamento():
                 tm.template_id AS template_id,
                 tm.mensaje AS mensaje,
                 d.nombre AS departamento,
-                tm.activo AS activo
+                tm.activo AS activo,
+                tm.campos_variables AS campos_variables
             FROM 
                 template_mensajes tm
             JOIN 
@@ -87,7 +88,6 @@ def get_templates_by_idioma_departamento():
             cursor.close()
         if conn:
             conn.close()
-
 @app.route('/api/send-message', methods=['POST'])
 def send_message():
     conn = None
