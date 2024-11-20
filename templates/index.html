@@ -15,14 +15,15 @@
             </div>
             <h2>Enviar mensaje a cliente</h2>
             <form id="messageForm">
+                <!-- Selector de Idiomas -->
                 <div class="form-group">
                     <label for="language">Idioma:</label>
                     <select id="language" required>
-                        <option value="es">Español</option>
-                        <option value="en">English</option>
+                        <option value="">Seleccionar idioma...</option>
                     </select>
                 </div>
 
+                <!-- Selector de Departamentos -->
                 <div class="form-group">
                     <label for="departamento">Departamento:</label>
                     <select id="departamento" required>
@@ -30,6 +31,7 @@
                     </select>
                 </div>
 
+                <!-- Selector de Templates -->
                 <div class="form-group">
                     <label for="template">Template:</label>
                     <select id="template" required disabled>
@@ -37,6 +39,7 @@
                     </select>
                 </div>
 
+                <!-- Campo de Número de Teléfono -->
                 <div class="form-group">
                     <label for="phoneNumber">Número de destino:</label>
                     <input type="tel" id="phoneNumber" required 
@@ -48,127 +51,98 @@
             </form>
         </div>
 
+        <!-- Sección de Vista Previa -->
         <div class="preview-section">
             <h2>Preview del Mensaje</h2>
-            <div id="messagePreview">Previsualización aquí...</div>
+            <div id="messagePreview"></div>
         </div>
     </div>
 
+    <!-- Lógica de Carga de Datos y Envío -->
     <script>
-    $(document).ready(function() {
-        let templatesData = {};
-
-        // Mostrar indicador de carga
-        function showLoader(message) {
-            $('#messagePreview').text(message || "Cargando...");
-        }
-
-        // Ocultar indicador de carga
-        function hideLoader() {
-            $('#messagePreview').text('');
-        }
-
-        // Cargar departamentos al iniciar
-        fetch('/api/departamentos')
-            .then(response => response.json())
-            .then(data => {
-                const select = $('#departamento');
-                data.forEach(dept => {
-                    select.append(`<option value="${dept.id}">${dept.nombre}</option>`);
-                });
-            })
-            .catch(() => alert('Error al cargar departamentos.'));
-
-        // Cuando se selecciona un departamento
-        $('#departamento').change(function() {
-            const departamentoId = $(this).val();
-            const templateSelect = $('#template');
-            
-            templateSelect.prop('disabled', true);
-            templateSelect.html('<option value="">Seleccionar template...</option>');
-
-            if (departamentoId) {
-                showLoader("Cargando templates...");
-                fetch(`/api/templates/${departamentoId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        templatesData = data.reduce((acc, template) => {
-                            acc[template.id] = template;
-                            return acc;
-                        }, {});
-
-                        data.forEach(template => {
-                            templateSelect.append(`<option value="${template.id}">${template.nombre}</option>`);
-                        });
-                        
-                        templateSelect.prop('disabled', false);
-                        hideLoader();
-                    })
-                    .catch(() => {
-                        alert('Error al cargar templates.');
-                        hideLoader();
+        $(document).ready(function() {
+            // Cargar idiomas al iniciar
+            fetch('/api/idiomas')
+                .then(response => response.json())
+                .then(data => {
+                    const languageSelect = $('#language');
+                    data.forEach(lang => {
+                        languageSelect.append(`<option value="${lang.idioma}">${lang.nombre}</option>`);
                     });
-            }
-        });
-
-        // Actualizar la previsualización
-        function updatePreview() {
-            const language = $('#language').val();
-            const templateId = $('#template').val();
-            const phoneNumber = $('#phoneNumber').val();
-
-            if (templateId && templatesData[templateId]) {
-                const template = templatesData[templateId];
-                let message = language === 'es' ? template.mensaje_es : template.mensaje_en;
-
-                // Reemplazar variables dinámicas con valores
-                const variables = template.variables || {};
-                Object.keys(variables).forEach(key => {
-                    const placeholder = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
-                    const value = prompt(`Ingrese valor para ${key}:`, variables[key] || '');
-                    message = message.replace(placeholder, value || variables[key]);
                 });
 
-                $('#messagePreview').text(message);
-            } else {
-                $('#messagePreview').text("Seleccione un template para previsualizar el mensaje.");
-            }
-        }
+            // Reiniciar departamentos al cambiar idioma
+            $('#language').change(function() {
+                $('#departamento').val('').change(); // Reinicia el departamento
+            });
 
-        $('#language, #template, #phoneNumber').on('change input', updatePreview);
+            // Cargar departamentos y templates
+            $('#departamento').change(function() {
+                const idioma = $('#language').val();
+                const departamentoId = $(this).val();
+                const templateSelect = $('#template');
 
-        // Enviar mensaje
-        $('#messageForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = {
-                language: $('#language').val(),
-                departamento_id: $('#departamento').val(),
-                template_id: $('#template').val(),
-                phoneNumber: $('#phoneNumber').val(),
-                message: $('#messagePreview').text()
-            };
+                // Limpiar y deshabilitar selector de templates
+                templateSelect.prop('disabled', true);
+                templateSelect.html('<option value="">Seleccionar template...</option>');
 
-            fetch('/api/send-message', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('Mensaje enviado exitosamente.');
-                } else {
-                    alert('Error al enviar el mensaje.');
+                // Validar que haya idioma y departamento seleccionados
+                if (idioma && departamentoId) {
+                    fetch(`/api/templates?idioma=${idioma}&departamento_id=${departamentoId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Agregar las opciones de templates
+                            data.forEach(template => {
+                                templateSelect.append(`<option value="${template.id}">${template.mensaje}</option>`);
+                            });
+                            templateSelect.prop('disabled', false);
+                        });
                 }
-            })
-            .catch(error => {
-                alert('Error al enviar el mensaje.');
-                console.error('Error:', error);
+            });
+
+            // Actualizar la vista previa del mensaje
+            function updatePreview() {
+                const templateId = $('#template').val();
+                const phoneNumber = $('#phoneNumber').val();
+
+                if (templateId) {
+                    const message = $('#template option:selected').text();
+                    const preview = `Para: ${phoneNumber || "Número no ingresado"}\nMensaje: ${message}`;
+                    $('#messagePreview').text(preview);
+                }
+            }
+
+            $('#template, #phoneNumber').on('change input', updatePreview);
+
+            // Enviar formulario
+            $('#messageForm').on('submit', function(e) {
+                e.preventDefault();
+
+                const formData = {
+                    idioma: $('#language').val(),
+                    departamento_id: $('#departamento').val(),
+                    template_id: $('#template').val(),
+                    phoneNumber: $('#phoneNumber').val(),
+                    message: $('#template option:selected').text()
+                };
+
+                fetch('/api/send-message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Mensaje enviado exitosamente');
+                })
+                .catch(error => {
+                    alert('Error al enviar el mensaje');
+                    console.error('Error:', error);
+                });
             });
         });
-    });
     </script>
 </body>
 </html>
