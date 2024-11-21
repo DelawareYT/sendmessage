@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -6,6 +6,48 @@
     <title>Mensaje Builder</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        #historySection {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            display: none; /* Oculto por defecto */
+            width: 100%; /* Ocupar todo el ancho */
+            box-sizing: border-box; /* Incluir padding en el ancho */
+        }
+        #historyTable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #historyTable th, #historyTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        #historyTable th {
+            background-color: #f2f2f2;
+        }
+        #toggleHistoryButton {
+            margin-top: 15px;
+            display: block;
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        #toggleHistoryButton:hover {
+            background-color: #0056b3;
+        }
+        .preview-section {
+            margin-bottom: 20px; /* Para separar de la sección del historial */
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -50,25 +92,46 @@
         <div class="preview-section">
             <h2>Preview del Mensaje</h2>
             <div id="messagePreview"></div>
+            <!-- Botón para mostrar/ocultar el historial -->
+            <button id="toggleHistoryButton">Mostrar Historial</button>
         </div>
     </div>
 
+    <!-- Sección del historial: ahora ocupa todo el ancho -->
+    <div id="historySection">
+        <h2>Historial de Mensajes</h2>
+        <table id="historyTable">
+            <thead>
+                <tr>
+                    <th>Idioma</th>
+                    <th>Departamento</th>
+                    <th>Template</th>
+                    <th>Teléfono</th>
+                    <th>Mensaje</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody id="historyTableBody">
+                <!-- Aquí se agregarán las filas -->
+            </tbody>
+        </table>
+    </div>
 
-    <table id="historyTable">
-        <thead>
-            <tr>
-                <th>Idioma</th>
-                <th>Departamento</th>
-                <th>Template</th>
-                <th>Teléfono</th>
-                <th>Mensaje</th>
-                <th>Fecha</th>
-            </tr>
-        </thead>
-        <tbody id="historyTableBody">
-            <!-- Aquí se agregarán las filas -->
-        </tbody>
-    </table>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Lógica para mostrar/ocultar el historial
+        $(document).ready(function() {
+            $('#toggleHistoryButton').click(function() {
+                const historySection = $('#historySection');
+                if (historySection.is(':visible')) {
+                    historySection.slideUp();
+                    $(this).text('Mostrar Historial');
+                } else {
+                    historySection.slideDown();
+                    $(this).text('Ocultar Historial');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

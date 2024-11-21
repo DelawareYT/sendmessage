@@ -96,7 +96,7 @@ def send_message():
     cursor = None
     try:
         data = request.json
-        print("Datos recibidos:", data)  # Imprime los datos recibidos
+        
 
         # Validar que todos los campos necesarios estén presentes
         required_fields = ['idioma', 'departamento_id', 'template_id', 'phoneNumber', 'message']
