@@ -70,8 +70,8 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.pop('logged_in', None)
-    return redirect(url_for('login'))
+    session.clear()  # Elimina la sesión del usuario
+    return redirect(url_for('index')) 
 
 @app.route('/')
 def index():

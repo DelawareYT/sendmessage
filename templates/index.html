@@ -6,6 +6,7 @@
     <title>Mensaje Builder</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         #historySection {
             margin-top: 15px;
@@ -54,6 +55,7 @@
         <div class="input-section">
             <div class="logo-container" id="logoindex">
                 <img src="/static/imagenes/delancer.png" alt="Delancer Logo" class="logo">
+                
             </div>
             <h2>Enviar mensaje a cliente</h2>
             <form id="messageForm">
@@ -90,6 +92,10 @@
         </div>
 
         <div class="preview-section">
+            <button id="logoutButton" onclick="window.location.href='/logout'">
+                <i class="fas fa-sign-out-alt"></i> <!-- Ícono de logout de Font Awesome -->
+            </button>
+
             <h2>Preview del Mensaje</h2>
             <div id="messagePreview"></div>
             <!-- Botón para mostrar/ocultar el historial -->

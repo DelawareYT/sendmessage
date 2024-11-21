@@ -5,6 +5,54 @@
     --button-hover-color: #0056b3;
 }
 
+
+/* Estilos específicos para la página de login */
+#login-page .login-container {
+    width: 100%;
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
+    text-align: center;
+}
+
+#login-page .login-container h2 {
+    margin-bottom: 15px;
+    color: var(--primary-color);
+    font-size: 24px;
+}
+
+#login-page .login-container .form-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Asegura que los inputs se centren */
+}
+
+#login-page .login-container input {
+    width: 80%;  /* Limita el ancho para que se vea más centrado */
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+#login-page .login-container button {
+    width: 80%;  /* Asegura que el botón tenga el mismo tamaño que los inputs */
+    padding: 12px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#login-page .login-container button:hover {
+    background-color: var(--secondary-color);
+}
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
@@ -95,53 +143,6 @@ button:hover {
     background-color: var(--button-hover-color);
 }
 
-/* Estilos específicos para la página de login */
-#login-page .login-container {
-    width: 100%;
-    max-width: 400px;
-    margin: 100px auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background-color: #f9f9f9;
-    text-align: center;
-}
-
-#login-page .login-container h2 {
-    margin-bottom: 15px;
-    color: var(--primary-color);
-    font-size: 24px;
-}
-
-#login-page .login-container .form-group {
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* Asegura que los inputs se centren */
-}
-
-#login-page .login-container input {
-    width: 80%;  /* Limita el ancho para que se vea más centrado */
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin-bottom: 15px;
-}
-
-#login-page .login-container button {
-    width: 80%;  /* Asegura que el botón tenga el mismo tamaño que los inputs */
-    padding: 12px;
-    background-color: var(--primary-color);
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-#login-page .login-container button:hover {
-    background-color: var(--secondary-color);
-}
 
 /* Estilos específicos para la página de registro */
 #register-page .login-container {
@@ -201,4 +202,39 @@ button:hover {
 .logo {
     max-height: 80px;         
     max-width: 100%;          
+}
+
+#logoutButton {
+    position: fixed; /* Para fijar el botón en la pantalla */
+    bottom: 20px; /* A 20px del borde inferior */
+    right: 20px; /* A 20px del borde derecho */
+    width: 60px; /* Ancho del botón */
+    height: 60px; /* Alto del botón */
+    background-color: #dc3545; /* Color rojo */
+    color: white;
+    border: none;
+    border-radius: 50%; /* Hacer el botón circular */
+    font-size: 30px; /* Tamaño del icono */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra para darle un efecto flotante */
+    transition: background-color 0.3s ease;
+}
+
+#logoutButton:hover {
+    background-color: #c82333; /* Cambio de color cuando se pasa el mouse */
+}
+
+/* Opcional: Agregar animación suave al aparecer el botón */
+#logoutButton {
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
 }
