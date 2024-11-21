@@ -40,45 +40,46 @@ $(document).ready(function() {
     }
 
     // Función para cargar el historial de mensajes
-    function loadMessageHistory() {
-        fetch('/api/historial-mensajes')
-            .then(response => response.json())
-            .then(data => {
-                console.log('Historial de mensajes cargado:', data); // Depuración
+function loadMessageHistory() {
+    fetch('/api/historial-mensajes')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Historial de mensajes cargado:', data); // Depuración
 
-                if (data.length === 0) {
-                    console.log('No hay mensajes en el historial');
-                }
+            if (data.length === 0) {
+                console.log('No hay mensajes en el historial');
+            }
 
-                const tableBody = $('#historyTableBody');
-                tableBody.html(''); // Limpiar la tabla antes de cargar los datos
+            const tableBody = $('#historyTableBody');
+            tableBody.html(''); // Limpiar la tabla antes de cargar los datos
 
-                data.forEach(message => {
-                    const departamentoNombre = departamentosMap[message.departamento_id] || 'Sin departamento';
-                    const idiomaNombre = idiomasMap[message.idioma] || 'Sin idioma';
-                    const template = templatesData[message.template_id] ? templatesData[message.template_id].template_nombre : 'Sin template';
-                    const numero = message.numero_destino || 'No disponible';
-                    const mensaje = message.mensaje || 'Mensaje no disponible';
-                    const fecha = new Date(message.fecha_envio).toLocaleString() || 'Fecha no disponible';
+            data.forEach(message => {
+                const departamentoNombre = departamentosMap[message.departamento_id] || 'Sin departamento';
+                const idiomaNombre = idiomasMap[message.idioma] || 'Sin idioma';
+                const template = templatesData[message.template_id] ? templatesData[message.template_id].template_nombre : 'Sin template';
+                const numero = message.numero_destino || 'No disponible';
+                const mensaje = message.mensaje || 'Mensaje no disponible';
+                const fecha = new Date(message.fecha_envio).toLocaleString() || 'Fecha no disponible';
+                const usuario = message.usuario || 'Usuario no disponible'; // Añadir el usuario
 
-                    // Agregar una fila en la tabla
-                    tableBody.append(`
-                        <tr>
-                            <td>${idiomaNombre}</td>
-                            <td>${departamentoNombre}</td>
-                            <td>${template}</td>
-                            <td>${numero}</td>
-                            <td>${mensaje}</td>
-                            <td>${fecha}</td>
-                        </tr>
-                    `);
-                });
-            })
-            .catch(error => {
-                console.error('Error al cargar el historial de mensajes:', error);
+                // Agregar una fila en la tabla
+                tableBody.append(`
+                    <tr>
+                        <td>${usuario}</td> <!-- Columna Usuario al principio -->
+                        <td>${idiomaNombre}</td>
+                        <td>${departamentoNombre}</td>
+                        <td>${template}</td>
+                        <td>${numero}</td>
+                        <td>${mensaje}</td>
+                        <td>${fecha}</td>
+                    </tr>
+                `);
             });
-    }
-
+        })
+        .catch(error => {
+            console.error('Error al cargar el historial de mensajes:', error);
+        });
+}
     // Activar el selector de departamentos cuando se seleccione un idioma
     $('#language').change(function() {
         const idiomaCodigo = $(this).val();

@@ -186,7 +186,6 @@ def send_message():
     cursor = None
     try:
         data = request.json
-        
 
         # Validar que todos los campos necesarios estén presentes
         required_fields = ['idioma', 'departamento_id', 'template_id', 'phoneNumber', 'message']
@@ -199,6 +198,14 @@ def send_message():
 
         ip_address = request.remote_addr
 
+        # Obtener el usuario desde la sesión
+        usuario = session.get('username')
+        if not usuario:
+            return jsonify({
+                'status': 'error',
+                'message': 'Usuario no autenticado'
+            }), 401  # Error si no hay un usuario autenticado
+
         message_data = {
             'language': data['idioma'],
             'departamento_id': data['departamento_id'],
@@ -207,7 +214,8 @@ def send_message():
             'message': data['message'],
             'ip': ip_address,
             'timestamp': datetime.now().isoformat(),
-            'campos': data.get('campos', {})
+            'campos': data.get('campos', {}),
+            'usuario': usuario  # Incluir el usuario que envió el mensaje
         }
 
         print("Datos a guardar en la base de datos:", message_data)
@@ -217,8 +225,8 @@ def send_message():
 
         query = '''
             INSERT INTO mensajes 
-            (idioma, departamento_id, template_id, numero_destino, mensaje, ip_origen, fecha_envio, json_data)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            (idioma, departamento_id, template_id, numero_destino, mensaje, ip_origen, fecha_envio, json_data, usuario)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         '''
 
         values = (
@@ -229,7 +237,8 @@ def send_message():
             message_data['message'],
             ip_address,
             datetime.now(),
-            json.dumps(message_data)
+            json.dumps(message_data),
+            message_data['usuario']  # Guardar el nombre de usuario en la base de datos
         )
 
         cursor.execute(query, values)
@@ -271,7 +280,6 @@ def get_idiomas():
             cursor.close()
         if conn:
             conn.close()
-
 @app.route('/api/historial-mensajes', methods=['GET'])
 def get_historial_mensajes():
     conn = None
@@ -280,7 +288,7 @@ def get_historial_mensajes():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        # Consulta sin el filtro 'activo' para comprobar si los templates se están vinculando correctamente
+        # Consulta modificada para incluir el 'usuario'
         query = '''
             SELECT 
                 m.id, 
@@ -291,16 +299,20 @@ def get_historial_mensajes():
                 m.mensaje, 
                 m.ip_origen, 
                 m.fecha_envio, 
-                IFNULL(tm.nombre, 'Sin Template') AS template_nombre  
+                IFNULL(tm.nombre, 'Sin Template') AS template_nombre,
+                m.usuario  -- Añadir la columna usuario
             FROM mensajes m
-            LEFT JOIN template_mensajes tm ON m.template_id = tm.template_id  
-            -- Aquí hemos eliminado el filtro 'tm.activo = 1' para depurar
+            LEFT JOIN template_mensajes tm ON m.template_id = tm.template_id
             ORDER BY m.fecha_envio DESC
             LIMIT 20
         '''
         
         cursor.execute(query)
         mensajes = cursor.fetchall()
+        
+        # Asegúrate de que los mensajes tienen la columna 'usuario'
+        for mensaje in mensajes:
+            print(f"Mensaje: {mensaje['mensaje']} - Usuario: {mensaje['usuario']}")
         
         return jsonify(mensajes), 200
     except Exception as e:
@@ -311,6 +323,7 @@ def get_historial_mensajes():
             cursor.close()
         if conn:
             conn.close()
+            
 def init_db():
     conn = None
     cursor = None

@@ -97,25 +97,26 @@
         </div>
     </div>
 
-    <!-- Sección del historial: ahora ocupa todo el ancho -->
-    <div id="historySection">
-        <h2>Historial de Mensajes</h2>
-        <table id="historyTable">
-            <thead>
-                <tr>
-                    <th>Idioma</th>
-                    <th>Departamento</th>
-                    <th>Template</th>
-                    <th>Teléfono</th>
-                    <th>Mensaje</th>
-                    <th>Fecha</th>
-                </tr>
-            </thead>
-            <tbody id="historyTableBody">
-                <!-- Aquí se agregarán las filas -->
-            </tbody>
-        </table>
-    </div>
+   <!-- Sección del historial: ahora ocupa todo el ancho -->
+<div id="historySection">
+    <h2>Historial de Mensajes</h2>
+    <table id="historyTable">
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Idioma</th>
+                <th>Departamento</th>
+                <th>Template</th>
+                <th>Teléfono</th>
+                <th>Mensaje</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody id="historyTableBody">
+            <!-- Aquí se agregarán las filas dinámicamente -->
+        </tbody>
+    </table>
+</div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
