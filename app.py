@@ -1,10 +1,11 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 import mysql.connector
 from datetime import datetime
 import json
+import bcrypt 
 
 app = Flask(__name__)
-
+app.secret_key = 'clave'
 # Configuración de la base de datos
 db_config = {
     'host': 'localhost',
@@ -25,9 +26,98 @@ def get_db_connection():
         print(f"Error de conexión a la base de datos: {err}")
         raise
 
+
+#AUTENTIFICACION
+# Middleware para proteger rutas
+@app.before_request
+def proteger_rutas():
+    rutas_publicas = ['/login', '/static/']  # Rutas abiertas
+    if not session.get('logged_in') and request.path not in rutas_publicas:
+        return redirect(url_for('login'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+
+            # Verificar si el usuario existe
+            cursor.execute("SELECT * FROM usuarios WHERE username = %s", (username,))
+            user = cursor.fetchone()
+
+            if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+                session['logged_in'] = True
+                session['username'] = username
+                return redirect(url_for('index'))
+            else:
+                return "Credenciales incorrectas", 401
+        except Exception as e:
+            print(f"Error en login: {str(e)}")
+            return "Error interno del servidor", 500
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('login'))
+
 @app.route('/')
 def index():
     return render_template('index.html')
+##Register
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+
+        if not username or not password or not confirm_password:
+            return "Todos los campos son obligatorios", 400
+        
+        if password != confirm_password:
+            return "Las contraseñas no coinciden", 400
+
+        conn = None
+        cursor = None
+        try:
+            # Encriptar la contraseña
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Insertar el nuevo usuario en la base de datos
+            query = "INSERT INTO usuarios (username, password_hash) VALUES (%s, %s)"
+            cursor.execute(query, (username, hashed_password.decode('utf-8')))
+            conn.commit()
+
+            return redirect(url_for('login'))
+        except mysql.connector.IntegrityError:
+            return "El nombre de usuario ya existe", 400
+        except Exception as e:
+            print(f"Error en register: {str(e)}")
+            return "Error interno del servidor", 500
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    return render_template('register.html')
+
 
 @app.route('/api/departamentos', methods=['GET'])
 def get_departamentos():
@@ -211,7 +301,7 @@ def get_historial_mensajes():
         
         cursor.execute(query)
         mensajes = cursor.fetchall()
-        print("Mensajes obtenidos:", mensajes)  # Agregar un print para verificar los resultados
+        
         return jsonify(mensajes), 200
     except Exception as e:
         print(f"Error en get_historial_mensajes: {str(e)}")
@@ -313,7 +403,7 @@ def init_db():
 if __name__ == '__main__':
     init_db()  
     app.run(debug=True, host="0.0.0.0", port=8000)
-    print("hola")
+    
     
 
 
