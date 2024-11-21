@@ -2,12 +2,13 @@
     --primary-color: #3498db;
     --secondary-color: #2980b9;
     --background-color: #f5f6fa;
+    --button-hover-color: #0056b3;
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
-    padding: 20px;
+    padding: 0;
     background-color: var(--background-color);
 }
 
@@ -24,6 +25,28 @@ body {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+/* Estilo para la sección de vista previa */
+.preview-section {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
+    display: block; /* Asegúrate de que esté visible por defecto */
+}
+
+.preview-section h2 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+#messagePreview {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    min-height: 150px;
+    border: 1px solid #ddd;
 }
 
 h2 {
@@ -44,10 +67,10 @@ label {
 
 select, input, textarea {
     width: 100%;
-    padding: 8px;
+    padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     font-size: 14px;
 }
 
@@ -59,56 +82,21 @@ select:focus, input:focus, textarea:focus {
 button {
     background-color: var(--primary-color);
     color: white;
-    padding: 10px 20px;
+    padding: 12px;
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s;
+    width: 100%;
 }
 
 button:hover {
-    background-color: var(--secondary-color);
+    background-color: var(--button-hover-color);
 }
 
-#messagePreview {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 4px;
-    min-height: 150px;
-    border: 1px solid #ddd;
-}
-
-.logo-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-  }
-  
-  .logo {
-    max-height: 50px;
-  }
-
-  .history-section {
-    margin-top: 20px;
-}
-
-#historyTable {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-#historyTable th, #historyTable td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-#historyTable th {
-    background-color: #f2f2f2;
-}
-
-.login-container {
+/* Estilos específicos para la página de login */
+#login-page .login-container {
     width: 100%;
     max-width: 400px;
     margin: 100px auto;
@@ -120,32 +108,97 @@ button:hover {
     text-align: center;
 }
 
-.login-container h2 {
-    margin-bottom: 20px;
-}
-
-.login-container .form-group {
+#login-page .login-container h2 {
     margin-bottom: 15px;
-    text-align: left;
+    color: var(--primary-color);
+    font-size: 24px;
 }
 
-.login-container input {
-    width: 100%;
-    padding: 10px;
+#login-page .login-container .form-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Asegura que los inputs se centren */
+}
+
+#login-page .login-container input {
+    width: 80%;  /* Limita el ancho para que se vea más centrado */
+    padding: 12px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    margin-bottom: 15px;
 }
 
-.login-container button {
-    width: 100%;
-    padding: 10px;
-    background-color: #007bff;
+#login-page .login-container button {
+    width: 80%;  /* Asegura que el botón tenga el mismo tamaño que los inputs */
+    padding: 12px;
+    background-color: var(--primary-color);
     color: #fff;
     border: none;
     border-radius: 5px;
     cursor: pointer;
 }
 
-.login-container button:hover {
-    background-color: #0056b3;
+#login-page .login-container button:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Estilos específicos para la página de registro */
+#register-page .login-container {
+    width: 100%;
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
+    text-align: center;
+}
+
+#register-page .login-container h2 {
+    margin-bottom: 15px;
+    color: var(--primary-color);
+    font-size: 24px;
+}
+
+#register-page .login-container .form-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Asegura que los inputs se centren */
+}
+
+#register-page .login-container input {
+    width: 80%;  /* Limita el ancho para que se vea más centrado */
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+#register-page .login-container button {
+    width: 80%;  /* Asegura que el botón tenga el mismo tamaño que los inputs */
+    padding: 12px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#register-page .login-container button:hover {
+    background-color: #218838;
+}
+.logo-container {
+    display: flex;
+    justify-content: center;  
+    align-items: center;      
+    margin-bottom: 20px;
+    height: 100px;            
+}
+
+.logo {
+    max-height: 80px;         
+    max-width: 100%;          
 }
