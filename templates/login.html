@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body id="login-page">
+<body id="login-page1">
      
     <div class="login-container">
         <h2>Iniciar Sesión</h2>
+        <img src="/static/imagenes/delancer.png" alt="Delancer Logo" class="logo">
         <form method="post" action="/login">
             <div class="form-group">
                 <input type="text" name="username" placeholder="Usuario" required>
@@ -20,5 +21,12 @@
             <button type="submit">Ingresar</button>
         </form>
     </div>
+
+    <!-- Mostrar alert si hay un error -->
+    {% if error %}
+    <script>
+        alert("{{ error }}");
+    </script>
+    {% endif %}
 </body>
 </html>

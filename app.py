@@ -31,7 +31,14 @@ def get_db_connection():
 # Middleware para proteger rutas
 @app.before_request
 def proteger_rutas():
-    rutas_publicas = ['/login', '/static/']  # Rutas abiertas
+    # Define las rutas que no necesitan autenticación
+    rutas_publicas = ['/login', '/logout']  # Añade otras rutas públicas si es necesario
+    
+    # Permitir acceso a archivos estáticos
+    if request.path.startswith('/static/'):
+        return  # Permitir el acceso sin restricciones
+
+    # Bloquear acceso a rutas privadas si no hay sesión activa
     if not session.get('logged_in') and request.path not in rutas_publicas:
         return redirect(url_for('login'))
 
@@ -56,28 +63,32 @@ def login():
                 session['username'] = username
                 return redirect(url_for('index'))
             else:
-                return "Credenciales incorrectas", 401
+                # Renderizar la página de login con un mensaje de error
+                return render_template('login.html', error="Credenciales incorrectas")
+
         except Exception as e:
             print(f"Error en login: {str(e)}")
-            return "Error interno del servidor", 500
+            return render_template('login.html', error="Error interno del servidor")
         finally:
             if cursor:
                 cursor.close()
             if conn:
                 conn.close()
 
+    # Si no es POST, solo renderizar el formulario de login
     return render_template('login.html')
-
 @app.route('/logout')
 def logout():
-    session.clear()  # Elimina la sesión del usuario
-    return redirect(url_for('index')) 
+    # Elimina la sesión del usuario
+    session.clear()
+    # Redirige al formulario de login
+    return redirect(url_for('login'))
 
 @app.route('/')
 def index():
     return render_template('index.html')
 ##Register
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register/usuarionuevo', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -311,8 +322,7 @@ def get_historial_mensajes():
         mensajes = cursor.fetchall()
         
         # Asegúrate de que los mensajes tienen la columna 'usuario'
-        for mensaje in mensajes:
-            print(f"Mensaje: {mensaje['mensaje']} - Usuario: {mensaje['usuario']}")
+       
         
         return jsonify(mensajes), 200
     except Exception as e:

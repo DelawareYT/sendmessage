@@ -7,7 +7,7 @@
 
 
 /* Estilos específicos para la página de login */
-#login-page .login-container {
+#login-page1 .login-container {
     width: 100%;
     max-width: 400px;
     margin: 100px auto;
@@ -19,20 +19,20 @@
     text-align: center;
 }
 
-#login-page .login-container h2 {
+#login-page1 .login-container h2 {
     margin-bottom: 15px;
     color: var(--primary-color);
     font-size: 24px;
 }
 
-#login-page .login-container .form-group {
+#login-page1 .login-container .form-group {
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
     align-items: center; /* Asegura que los inputs se centren */
 }
 
-#login-page .login-container input {
+#login-page1 .login-container input {
     width: 80%;  /* Limita el ancho para que se vea más centrado */
     padding: 12px;
     border: 1px solid #ccc;
@@ -40,7 +40,7 @@
     margin-bottom: 15px;
 }
 
-#login-page .login-container button {
+#login-page1 .login-container button {
     width: 80%;  /* Asegura que el botón tenga el mismo tamaño que los inputs */
     padding: 12px;
     background-color: var(--primary-color);
@@ -50,7 +50,7 @@
     cursor: pointer;
 }
 
-#login-page .login-container button:hover {
+#login-page1 .login-container button:hover {
     background-color: var(--secondary-color);
 }
 body {
@@ -138,6 +138,7 @@ button {
     transition: background-color 0.3s;
     width: 100%;
 }
+
 
 button:hover {
     background-color: var(--button-hover-color);
